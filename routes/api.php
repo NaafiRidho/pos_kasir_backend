@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,4 +51,16 @@ Route::group(['prefix' => 'products'], function () {
     Route::post('/upload_image', [ProductController::class, 'upload_product_image']); // jika dipisah
     Route::put('/{id}', [ProductController::class, 'edit_product']);
     Route::delete('/{id}', [ProductController::class, 'delete_product']);
+
+// Sales management routes
+Route::group(['prefix' => 'sales'], function () {
+    // Create a new draft sale
+    Route::post('/', [SaleController::class, 'create_sale']);
+
+    // Add/remove items to/from a sale
+    Route::post('/items', [SaleController::class, 'add_item']);
+    Route::delete('/items/{saleItemId}', [SaleController::class, 'remove_item']);
+
+    // Fetch a sale with its items
+    Route::get('/{saleId}', [SaleController::class, 'get_sale']);
 });

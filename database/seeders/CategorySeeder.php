@@ -7,33 +7,27 @@ use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        DB::table('categories')->insert([
-            [
-                'categories_id' => 1,
-                'name' => 'Makanan',
-                'description' => 'Berbagai jenis makanan',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'categories_id' => 2,
-                'name' => 'Minuman',
-                'description' => 'Minuman dingin & panas',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'categories_id' => 3,
-                'name' => 'ATK',
-                'description' => 'Alat tulis kantor',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        $now = now();
+
+        $categories = [
+            ['name' => 'Sembako', 'description' => 'Kebutuhan pokok (beras, gula, minyak, mie, dll)'],
+            ['name' => 'Minuman', 'description' => 'Aneka minuman kemasan'],
+            ['name' => 'Snack', 'description' => 'Cemilan & snack kemasan'],
+            ['name' => 'Kebutuhan Rumah', 'description' => 'Home essentials & kebersihan'],
+            ['name' => 'Perawatan Pribadi', 'description' => 'Sabun, sampo, dsb.'],
+        ];
+
+        foreach ($categories as $c) {
+            DB::table('categories')->updateOrInsert(
+                ['name' => $c['name']],
+                [
+                    'description' => $c['description'],
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]
+            );
+        }
     }
 }

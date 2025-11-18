@@ -1,0 +1,90 @@
+@startuml ERD_POS_KASIR
+hide circle
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+' Entities
+entity "roles" as roles {
+  *role_id : BIGINT PK
+  --
+  name : VARCHAR
+  description : TEXT?
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "users" as users {
+  *user_id : BIGINT PK
+  role_id : BIGINT FK -> roles.role_id
+  uuid : CHAR(36)
+  username : VARCHAR UNIQUE
+  name : VARCHAR?
+  email : VARCHAR UNIQUE?
+  password : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "categories" as categories {
+  *categories_id : BIGINT PK
+  name : VARCHAR
+  description : TEXT?
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "products" as products {
+  *product_id : BIGINT PK
+  categories_id : BIGINT FK -> categories.categories_id
+  name : VARCHAR
+  description : TEXT?
+  cost_price : DECIMAL(10,2)
+  selling_price : DECIMAL(10,2)
+  stock : INT
+  product_images : JSON?
+  barcode : VARCHAR UNIQUE?
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "payments" as payments {
+  *payment_id : BIGINT PK
+  payment_method : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "sales" as sales {
+  *sale_id : BIGINT PK
+  user_id : BIGINT FK -> users.user_id
+  payment_id : BIGINT FK -> payments.payment_id
+  subtotal : DECIMAL(10,2)
+  discount_amount : DECIMAL(10,2)
+  tax_amount : DECIMAL(10,2)
+  total_amount : DECIMAL(10,2)
+  payment_status : ENUM(draft,completed,...)
+  sale_date : DATETIME
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "sale_items" as sale_items {
+  *sale_item_id : BIGINT PK
+  sale_id : BIGINT FK -> sales.sale_id
+  product_id : BIGINT FK -> products.product_id
+  name_product : VARCHAR (snapshot)
+  quantity : INT
+  discount_amount : DECIMAL(10,2)
+  subtotal : DECIMAL(10,2)
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' Relationships (crow's foot style approximated)
+roles ||--o{ users : has
+users ||--o{ sales : creates
+payments ||--o{ sales : method
+categories ||--o{ products : groups
+products ||--o{ sale_items : referenced
+sales ||--o{ sale_items : contains
+@enduml

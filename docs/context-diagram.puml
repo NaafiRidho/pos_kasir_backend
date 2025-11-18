@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+skinparam rectangleStyle rounded
+skinparam actorStyle awesome
+
+actor Admin
+actor "Kasir" as Cashier
+rectangle "POS Kasir Backend API (Laravel)" as API
+
+database "MySQL Database" as DB
+
+Admin --> API : Manage Users/Categories/Products
+Cashier --> API : Sales ops + Auth
+API --> DB : Read/Write Entities
+@enduml
