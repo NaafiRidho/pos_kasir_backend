@@ -51,6 +51,7 @@ Route::group(['prefix' => 'products'], function () {
     Route::post('/upload_image', [ProductController::class, 'upload_product_image']); // jika dipisah
     Route::put('/{id}', [ProductController::class, 'edit_product']);
     Route::delete('/{id}', [ProductController::class, 'delete_product']);
+});
 
 // Sales management routes
 Route::group(['prefix' => 'sales'], function () {
