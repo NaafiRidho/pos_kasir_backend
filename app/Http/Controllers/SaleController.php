@@ -125,6 +125,15 @@ class SaleController extends Controller
 
             return DB::transaction(function () use ($item) {
                 $saleId = $item->sale_id;
+                $qty = $item->quantity ?? 0;
+
+                // Restore product stock under lock to avoid race conditions
+                $product = Product::lockForUpdate()->find($item->product_id);
+                if ($product && $qty > 0) {
+                    $product->increment('stock', $qty);
+                }
+
+                // Now delete the sale item
                 $item->delete();
 
                 $sale = Sale::lockForUpdate()->findOrFail($saleId);
