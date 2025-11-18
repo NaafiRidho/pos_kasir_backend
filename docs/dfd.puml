@@ -1,0 +1,57 @@
+@startuml DFD_POS_KASIR
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam rectangleFontStyle bold
+
+actor "Admin" as Admin
+actor "Kasir" as Cashier
+
+rectangle "Auth Service" as Auth {
+  () "Login" as P_Login
+  () "Refresh Token" as P_Refresh
+  () "Logout" as P_Logout
+}
+
+rectangle "Master Data Service" as Master {
+  () "Manage Categories" as P_Cat
+  () "Manage Products" as P_Prod
+  () "Manage Users" as P_User
+}
+
+rectangle "Sales Service" as SalesSvc {
+  () "Create Sale Draft" as P_SaleCreate
+  () "Add Item (Dec Stock)" as P_AddItem
+  () "Remove Item (Inc Stock)" as P_RemItem
+  () "View Sale" as P_ViewSale
+}
+
+database "MySQL" as DB
+
+' External Actors to Processes
+Admin --> P_Login
+Admin --> P_Cat
+Admin --> P_Prod
+Admin --> P_User
+Admin --> P_ViewSale
+
+Cashier --> P_Login
+Cashier --> P_SaleCreate
+Cashier --> P_AddItem
+Cashier --> P_RemItem
+Cashier --> P_ViewSale
+
+' Data flows (abstracted)
+P_Cat --> DB : CRUD categories
+P_Prod --> DB : CRUD products / Read stock
+P_User --> DB : CRUD users
+P_SaleCreate --> DB : INSERT sale
+P_AddItem --> DB : INSERT sale_item / UPDATE stock / UPDATE sale totals
+P_RemItem --> DB : DELETE sale_item / UPDATE stock / UPDATE sale totals
+P_ViewSale --> DB : SELECT sale + items
+P_Login --> DB : SELECT user
+P_Refresh --> DB : SELECT user
+P_Logout --> DB : (token invalidation)
+
+@enduml

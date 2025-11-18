@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,8 +18,12 @@ use App\Http\Controllers\UsersController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware(['jwt.verify'])->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
 // Category management routes (protected)
@@ -34,4 +40,17 @@ Route::group(['prefix' => 'users'], function () {
     Route::post('/add_user', [UsersController::class, 'add_user']);
     Route::put('/{id}', [UsersController::class, 'edit_user']);
     Route::delete('/{id}', [UsersController::class, 'delete_user']);
+});
+
+// Sales management routes
+Route::group(['prefix' => 'sales'], function () {
+    // Create a new draft sale
+    Route::post('/', [SaleController::class, 'create_sale']);
+
+    // Add/remove items to/from a sale
+    Route::post('/items', [SaleController::class, 'add_item']);
+    Route::delete('/items/{saleItemId}', [SaleController::class, 'remove_item']);
+
+    // Fetch a sale with its items
+    Route::get('/{saleId}', [SaleController::class, 'get_sale']);
 });

@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Admin
+actor "Kasir" as Cashier
+
+rectangle "POS Kasir Backend" as System {
+  usecase "Login / Logout / Refresh / Me" as UC_Auth
+  usecase "Manage Categories" as UC_Cat
+  usecase "Manage Products" as UC_Prod
+  usecase "Manage Users" as UC_Users
+  usecase "Create Sale (Draft)" as UC_SaleCreate
+  usecase "Add Item to Sale\n(Validate & Decrement Stock)" as UC_AddItem
+  usecase "Remove Item from Sale\n(Increment Stock)" as UC_RemoveItem
+  usecase "View Sale" as UC_ViewSale
+}
+
+Admin --> UC_Auth
+Admin --> UC_Cat
+Admin --> UC_Prod
+Admin --> UC_Users
+Admin --> UC_ViewSale
+
+Cashier --> UC_Auth
+Cashier --> UC_SaleCreate
+Cashier --> UC_AddItem
+Cashier --> UC_RemoveItem
+Cashier --> UC_ViewSale
+@enduml
