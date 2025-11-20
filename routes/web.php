@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,6 +24,4 @@ Route::group(['prefix' => 'categories'], function () {
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-});
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
