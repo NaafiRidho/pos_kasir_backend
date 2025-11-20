@@ -34,6 +34,7 @@ Route::group(['prefix' => 'categories'], function () {
     Route::post('/add_category', [CategoryController::class, 'add_category']);
     Route::put('/{id}', [CategoryController::class, 'edit_category']);
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
+});
 // Authentication (web session)
 Route::get('/login', [LoginController::class, 'show'])->name('login.form');
 Route::post('/login', [LoginController::class, 'authenticate'])->name('login.perform');
