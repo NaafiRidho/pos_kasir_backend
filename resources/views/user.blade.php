@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{ showAddUser:false, showEditUser:false }" class="space-y-8">
+<div x-data="{ showModal:false, showEditModal:false, showDeleteModal:false }" class="space-y-8">
     {{-- HEADER --}}
     <div class="flex justify-between items-center mb-2 mt-2">
         <div>
@@ -29,7 +29,7 @@
                         <i class="fa-solid fa-magnifying-glass mr-1"></i> Filter
                     </button>
                 </form>
-                <button id="btnOpenCreate" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold shadow-md hover:bg-green-700 transition">
+                <button type="button" @click="showModal = true" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold shadow-md hover:bg-green-700 transition">
                     <i class="fa-solid fa-circle-plus mr-1"></i> Tambah User
                 </button>
             </div>
@@ -60,7 +60,19 @@
                             <td class="px-4 py-3 text-gray-600">{{ $u->email }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ optional($u->role)->name ?? '-' }}</td>
                             <td class="px-4 py-3 flex gap-3 justify-center">
-                                <button type="button" title="Edit" data-user="{{ json_encode(['user_id'=>$u->user_id,'name'=>$u->name,'username'=>$u->username,'email'=>$u->email,'role_id'=>$u->role_id]) }}" class="btnEdit text-blue-500 hover:text-blue-700 transition">
+                                <button type="button"
+                                    title="Edit"
+                                    @click="
+                                        showEditModal = true;
+                                        $nextTick(() => {
+                                            document.getElementById('edit_user_id').value='{{ $u->user_id }}';
+                                            document.getElementById('edit_name').value=@js($u->name);
+                                            document.getElementById('edit_username').value=@js($u->username);
+                                            document.getElementById('edit_email').value=@js($u->email);
+                                            document.getElementById('edit_role_id').value='{{ $u->role_id }}';
+                                        });
+                                    "
+                                    class="text-blue-500 hover:text-blue-700 transition">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <button type="button" title="Hapus" data-id="{{ $u->user_id }}" class="btnDelete text-red-500 hover:text-red-700 transition">
@@ -87,78 +99,181 @@
     @include('components.modals.add-user')
     @include('components.modals.edit-user')
 
-    {{-- PAGE SCRIPT --}}
     <script>
-    function getJwtToken(){
-        const m = document.cookie.split('; ').find(x=>x.startsWith('jwt_token='));
-        return m ? decodeURIComponent(m.split('=')[1]) : null;
-    }
-    const alpineRoot = document.querySelector('[x-data]');
-    const openCreateBtn = document.getElementById('btnOpenCreate');
-    if(openCreateBtn){ openCreateBtn.addEventListener('click',()=>{ if(alpineRoot?.__x?.$data){ alpineRoot.__x.$data.showAddUser = true; } }); }
+        // 1. Fungsi Ambil Token
+        function getJwtToken() {
+            let token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
+            if (!token) {
+                const m = document.cookie.split('; ').find(x => x.startsWith('jwt_token='));
+                token = m ? decodeURIComponent(m.split('=')[1]) : null;
+            }
+            return token;
+        }
 
-    document.querySelectorAll('.btnEdit').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-            const raw = btn.getAttribute('data-user'); if(!raw) return;
-            let data; try { data = JSON.parse(raw); } catch(e){ return; }
-            const idEl = document.getElementById('edit_user_id'); if(!idEl) return;
-            idEl.value = data.user_id || '';
-            document.getElementById('edit_name').value = data.name || '';
-            document.getElementById('edit_username').value = data.username || '';
-            document.getElementById('edit_email').value = data.email || '';
-            document.getElementById('edit_role_id').value = (data.role_id ?? '');
-            if(alpineRoot?.__x?.$data){ alpineRoot.__x.$data.showEditUser = true; }
+        // Helper: Tampilkan Alert Sukses lalu Reload
+        function showSuccessAndReload(message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: message,
+                confirmButtonColor: '#7c3aed',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                // Halaman hanya direload setelah user klik OK
+                if (result.isConfirmed || result.isDismissed) {
+                    location.reload();
+                }
+            });
+        }
+
+        // 2. Logic DELETE User
+        document.querySelectorAll('.btnDelete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                if (!id) return;
+
+                // Gunakan SweetAlert Confirm
+                Swal.fire({
+                    title: 'Hapus user ini?',
+                    text: "Data tidak bisa dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const token = getJwtToken();
+                        fetch(`/api/users/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.meta && res.meta.status === 200) {
+                                showSuccessAndReload(res.meta.message);
+                            } else {
+                                Swal.fire('Gagal!', (res.meta && res.meta.message) ? res.meta.message : 'Gagal menghapus', 'error');
+                            }
+                        })
+                        .catch(() => Swal.fire('Error!', 'Terjadi kesalahan jaringan', 'error'));
+                    }
+                });
+            });
         });
-    });
 
-    document.querySelectorAll('.btnDelete').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-            const id = btn.getAttribute('data-id'); if(!id) return;
-            if(!confirm('Hapus user ini?')) return;
-            const token = getJwtToken();
-            fetch(`/api/users/${id}`, { method:'DELETE', headers:{ 'Accept':'application/json', ...(token?{ 'Authorization': 'Bearer '+token }: {}) } })
-                .then(r=>r.json())
-                .then(res=>{ if(res.success){ location.reload(); } else { alert(res.message || 'Gagal menghapus'); } })
-                .catch(()=>alert('Error jaringan'));
-        });
-    });
+        // 3. Logic ADD User
+        const addForm = document.getElementById('add-user-form');
+        if (addForm) {
+            addForm.addEventListener('submit', e => {
+                e.preventDefault();
+                const token = getJwtToken();
 
-    const addForm = document.getElementById('add-user-form');
-    if(addForm){ addForm.addEventListener('submit', e => {
-        e.preventDefault();
-        const token = getJwtToken();
-        const payload = {
-            name: document.getElementById('add_name').value,
-            username: document.getElementById('add_username').value,
-            email: document.getElementById('add_email').value,
-            password: document.getElementById('add_password').value,
-            role_id: document.getElementById('add_role_id').value || null,
-        };
-        const alertBox = document.getElementById('add_user_alert'); alertBox?.classList.add('hidden');
-        fetch('/api/users/add_user', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json', ...(token?{ 'Authorization': 'Bearer '+token }: {}) }, body: JSON.stringify(payload) })
-            .then(r=>r.json())
-            .then(res=>{ if(res.success){ location.reload(); } else if(alertBox){ alertBox.textContent = res.message || 'Gagal menyimpan'; alertBox.className='text-xs font-medium text-red-600'; alertBox.classList.remove('hidden'); } })
-            .catch(()=>{ if(alertBox){ alertBox.textContent='Error jaringan'; alertBox.className='text-xs font-medium text-red-600'; alertBox.classList.remove('hidden'); } });
-    }); }
+                const payload = {
+                    name: document.getElementById('add_name').value,
+                    username: document.getElementById('add_username').value,
+                    email: document.getElementById('add_email').value,
+                    password: document.getElementById('add_password').value,
+                    role_id: document.getElementById('add_role_id').value || null,
+                };
 
-    const editForm = document.getElementById('edit-user-form');
-    if(editForm){ editForm.addEventListener('submit', e => {
-        e.preventDefault();
-        const token = getJwtToken();
-        const id = document.getElementById('edit_user_id').value;
-        const payload = {
-            name: document.getElementById('edit_name').value,
-            username: document.getElementById('edit_username').value,
-            email: document.getElementById('edit_email').value,
-            role_id: document.getElementById('edit_role_id').value || null,
-        };
-        const pwd = document.getElementById('edit_password').value; if(pwd) payload.password = pwd;
-        const alertBox = document.getElementById('edit_user_alert'); alertBox?.classList.add('hidden');
-        fetch(`/api/users/${id}`, { method:'PUT', headers:{ 'Content-Type':'application/json', 'Accept':'application/json', ...(token?{ 'Authorization': 'Bearer '+token }: {}) }, body: JSON.stringify(payload) })
-            .then(r=>r.json())
-            .then(res=>{ if(res.success){ location.reload(); } else if(alertBox){ alertBox.textContent = res.message || 'Gagal menyimpan'; alertBox.className='text-xs font-medium text-red-600'; alertBox.classList.remove('hidden'); } })
-            .catch(()=>{ if(alertBox){ alertBox.textContent='Error jaringan'; alertBox.className='text-xs font-medium text-red-600'; alertBox.classList.remove('hidden'); } });
-    }); }
+                const alertBox = document.getElementById('add_user_alert');
+                alertBox?.classList.add('hidden');
+
+                fetch('/api/users/add_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.meta && res.meta.status === 200) {
+                        // Sembunyikan modal (opsional, via AlpineJS data jika perlu)
+                        // document.querySelector('[x-data]').__x.$data.showModal = false;
+
+                        // PANGGIL FUNGSI SUKSES DI SINI
+                        showSuccessAndReload(res.meta.message);
+
+                    } else {
+                        const errorMsg = (res.meta && res.meta.message) ? res.meta.message : 'Gagal menyimpan';
+                        if (alertBox) {
+                            alertBox.textContent = errorMsg;
+                            alertBox.className = 'text-xs font-medium text-red-600';
+                            alertBox.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch((err) => {
+                    if (alertBox) {
+                        alertBox.textContent = 'Error jaringan';
+                        alertBox.className = 'text-xs font-medium text-red-600';
+                        alertBox.classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        // 4. Logic EDIT User
+        const editForm = document.getElementById('edit-user-form');
+        if (editForm) {
+            editForm.addEventListener('submit', e => {
+                e.preventDefault();
+                const token = getJwtToken();
+                const id = document.getElementById('edit_user_id').value;
+
+                const payload = {
+                    name: document.getElementById('edit_name').value,
+                    username: document.getElementById('edit_username').value,
+                    email: document.getElementById('edit_email').value,
+                    role_id: document.getElementById('edit_role_id').value || null,
+                };
+
+                const pwd = document.getElementById('edit_password').value;
+                if (pwd) payload.password = pwd;
+
+                const alertBox = document.getElementById('edit_user_alert');
+                alertBox?.classList.add('hidden');
+
+                fetch(`/api/users/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.meta && res.meta.status === 200) {
+                        // PANGGIL FUNGSI SUKSES DI SINI
+                        showSuccessAndReload(res.meta.message);
+                    } else {
+                        const errorMsg = (res.meta && res.meta.message) ? res.meta.message : 'Gagal menyimpan';
+                        if (alertBox) {
+                            alertBox.textContent = errorMsg;
+                            alertBox.className = 'text-xs font-medium text-red-600';
+                            alertBox.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(() => {
+                    if (alertBox) {
+                        alertBox.textContent = 'Error jaringan';
+                        alertBox.className = 'text-xs font-medium text-red-600';
+                        alertBox.classList.remove('hidden');
+                    }
+                });
+            });
+        }
     </script>
 </div>
 @endsection

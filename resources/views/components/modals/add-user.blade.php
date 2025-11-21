@@ -1,11 +1,11 @@
 <div
-    x-show="showAddUser"
+    x-show="showModal"
     x-transition.opacity
     x-cloak
     class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
 >
     <div
-        x-show="showAddUser"
+        x-show="showModal"
         x-transition.scale.origin.bottom.duration.300ms
         class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
         role="dialog" aria-modal="true" aria-labelledby="addUserTitle"
@@ -17,7 +17,7 @@
                 </div>
                 <h2 id="addUserTitle" class="text-xl font-semibold">Tambah User Baru</h2>
             </div>
-            <button @click="showAddUser = false" class="absolute right-4 top-4 text-white hover:text-gray-200 transition">
+            <button @click="showModal = false" class="absolute right-4 top-4 text-white hover:text-gray-200 transition">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
@@ -56,7 +56,7 @@
                 <div id="add_user_alert" class="hidden text-xs font-medium"></div>
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
-                <button type="button" @click="showAddUser = false" class="px-4 py-2 bg-white rounded-lg border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-100 transition">Batal</button>
+                <button type="button" @click="showModal = false" class="px-4 py-2 bg-white rounded-lg border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-100 transition">Batal</button>
                 <button type="submit" form="add-user-form" class="px-4 py-2 bg-purple-600 rounded-lg text-white text-sm font-semibold hover:bg-purple-700 transition shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-save"></i> Simpan
                 </button>

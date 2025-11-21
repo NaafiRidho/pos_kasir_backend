@@ -37,7 +37,7 @@ Route::group(['prefix' => 'categories'], function () {
 
 // Users management routes
 Route::prefix('users')
-    ->middleware(['jwt.verify', 'role:Admin'])
+    ->middleware(['jwt.cookie','jwt.verify', 'role:Admin'])
     ->group(function () {
         Route::get('/', [UsersController::class, 'list_user']);
         Route::post('/add_user', [UsersController::class, 'add_user']);

@@ -35,12 +35,15 @@ Route::group(['prefix' => 'categories'], function () {
     Route::put('/{id}', [CategoryController::class, 'edit_category']);
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
 });
+
 // Authentication (web session)
 Route::get('/login', [AuthController::class, 'show'])->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
-Route::middleware(['jwt.cookie'])->group(function () {
+Route::middleware(['jwt.cookie', 'jwt.verify'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
 });
+
+
