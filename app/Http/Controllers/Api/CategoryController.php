@@ -23,7 +23,7 @@ class CategoryController extends Controller
 
             $category = Category::create($data);
 
-            return Response::success($category, 'Category created', 201);
+            return Response::success($category, 'Category created');
         } catch (Throwable $e) {
             return Response::error($e);
         }

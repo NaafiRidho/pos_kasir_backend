@@ -28,12 +28,15 @@ Route::middleware(['jwt.verify'])->group(function () {
 });
 
 // Category management routes (protected)
-Route::group(['prefix' => 'categories'], function () {
-    Route::get('/', [CategoryController::class, 'list_categories']);
-    Route::post('/add_category', [CategoryController::class, 'add_category']);
-    Route::put('/{id}', [CategoryController::class, 'edit_category']);
-    Route::delete('/{id}', [CategoryController::class, 'delete_category']);
-});
+Route::prefix('categories')
+    ->middleware(['jwt.cookie', 'jwt.verify', 'role:Admin'])
+    ->group(function () {
+        Route::get('/', [CategoryController::class, 'list_categories']);
+        Route::post('/add_category', [CategoryController::class, 'add_category']);
+        Route::put('/{id}', [CategoryController::class, 'edit_category']);
+        Route::delete('/{id}', [CategoryController::class, 'delete_category']);
+    });
+
 
 // Users management routes
 Route::prefix('users')
