@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SalesReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,4 +49,6 @@ Route::middleware(['jwt.cookie', 'role:Admin'])->group(function () {
     Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
     Route::get("/category", [DashboardController::class, 'category']);
     Route::get('/products', [ProductController::class, 'index'])->name('products.manage');
+    Route::get('/laporan-penjualan', [SalesReportController::class, 'index'])->name('sales.report');
+    Route::get('/laporan-penjualan/export-pdf', [SalesReportController::class, 'exportPdf'])->name('sales.report.pdf');
 });
