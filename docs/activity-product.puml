@@ -1,0 +1,115 @@
+@startuml Product Management - Activity Diagram
+
+title Activity Diagram - Product Management (Admin)
+
+|Admin|
+start
+:Access Product Page;
+
+|System|
+:Load products from database;
+:Display product list with pagination;
+
+|Admin|
+if (What action?) then (Add Product)
+    :Click "Tambah Produk";
+    :Fill product form:
+    - Name
+    - SKU
+    - Category
+    - Price
+    - Stock
+    - Description
+    - Image (optional);
+
+    |System|
+    :Validate input data;
+
+    if (Validation passed?) then (yes)
+        :Upload product image\n(if provided);
+        :Save image to storage;
+        :Insert product to database;
+        :Show success message;
+        :Refresh product list;
+    else (no)
+        :Show validation errors;
+        stop
+    endif
+
+elseif (Edit Product) then
+    :Click "Edit" button;
+
+    |System|
+    :Load product data;
+    :Populate edit form;
+
+    |Admin|
+    :Modify product details;
+
+    |System|
+    :Validate input data;
+
+    if (Validation passed?) then (yes)
+        if (New image uploaded?) then (yes)
+            :Delete old image;
+            :Upload new image;
+        else (no)
+            :Keep existing image;
+        endif
+
+        :Update product in database;
+        :Show success message;
+        :Refresh product list;
+    else (no)
+        :Show validation errors;
+        stop
+    endif
+
+elseif (Delete Product) then
+    :Click "Delete" button;
+
+    |System|
+    :Show confirmation modal;
+
+    |Admin|
+    if (Confirm delete?) then (yes)
+        |System|
+        :Check if product\nused in sales;
+
+        if (Product has sales?) then (yes)
+            :Show error:\n"Cannot delete product\nwith sales history";
+            stop
+        else (no)
+            :Delete product image;
+            :Delete product from database;
+            :Show success message;
+            :Refresh product list;
+        endif
+    else (no)
+        :Cancel deletion;
+        stop
+    endif
+
+elseif (Search/Filter) then
+    :Enter search keyword\nor select category;
+
+    |System|
+    :Query products with filters;
+    :Display filtered results;
+
+else (View Details)
+    :Click product name/image;
+
+    |System|
+    :Show product details modal:
+    - Image
+    - Name, SKU
+    - Category
+    - Price, Stock
+    - Description
+    - Created/Updated date;
+endif
+
+stop
+
+@enduml

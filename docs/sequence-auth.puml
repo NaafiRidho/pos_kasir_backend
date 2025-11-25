@@ -1,0 +1,47 @@
+@startuml Authentication Flow
+
+title Authentication Flow - Simplified
+
+actor Admin
+participant Browser
+participant API
+participant Database
+
+== Login ==
+
+Admin -> Browser: Enter credentials
+Browser -> API: POST /login
+API -> Database: Verify user
+Database --> API: User data
+
+alt Valid
+    API --> Browser: JWT token + redirect
+    Browser -> Admin: Dashboard
+else Invalid
+    API --> Browser: Error
+    Browser -> Admin: Login error
+end
+
+== Access Protected Page ==
+
+Admin -> Browser: Navigate
+Browser -> API: Request + JWT
+API -> API: Verify token & role
+
+alt Authorized
+    API -> Database: Get data
+    Database --> API: Data
+    API --> Browser: Page
+    Browser -> Admin: Display
+else Unauthorized
+    API --> Browser: Redirect login
+end
+
+== Logout ==
+
+Admin -> Browser: Click logout
+Browser -> API: POST /logout
+API -> Database: Invalidate token
+API --> Browser: Redirect login
+
+@enduml

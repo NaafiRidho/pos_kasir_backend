@@ -1,15 +1,89 @@
-@startuml
-left to right direction
-skinparam rectangleStyle rounded
-skinparam actorStyle awesome
+@startuml POS Kasir - Context Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-actor Admin
-actor "Kasir" as Cashier
-rectangle "POS Kasir Backend API (Laravel)" as API
+LAYOUT_WITH_LEGEND()
 
-database "MySQL Database" as DB
+title Context Diagram - Sistem POS Kasir
 
-Admin --> API : Manage Users/Categories/Products
-Cashier --> API : Sales ops + Auth
-API --> DB : Read/Write Entities
+' ====================
+' ACTORS
+' ====================
+Person(admin, "Admin/Owner", "Administrator toko yang mengelola sistem kasir:\n- Manajemen produk & kategori\n- Manajemen user\n- Melihat laporan penjualan\n- Export laporan PDF")
+
+Person(kasir, "Kasir", "Staff kasir yang melakukan transaksi:\n- Login ke sistem\n- Scan/pilih produk\n- Proses pembayaran\n- Cetak struk")
+
+' ====================
+' SYSTEM BOUNDARIES
+' ====================
+System_Boundary(pos_system, "Sistem POS Kasir") {
+    System(web_app, "Web Application", "Aplikasi web berbasis Laravel untuk Admin:\n- Dashboard statistik penjualan\n- CRUD Produk, Kategori, User\n- Laporan penjualan bulanan\n- Export PDF dengan DomPDF\n- Authentication dengan JWT Cookie")
+
+    System(mobile_app, "Mobile Application", "Aplikasi mobile untuk Kasir:\n- Point of Sale interface\n- Cart management\n- Payment processing\n- Receipt printing\n- Authentication dengan JWT Token")
+
+    SystemDb(api, "REST API", "Laravel API Backend:\n- RESTful endpoints\n- JWT authentication\n- Role-based authorization\n- Data validation\n- Business logic")
+}
+
+' ====================
+' EXTERNAL SYSTEMS
+' ====================
+System_Ext(jwt_service, "JWT Authentication", "Tymon JWT-Auth:\n- Token generation\n- Token validation\n- Token refresh\n- Cookie & Bearer support")
+
+System_Ext(pdf_generator, "DomPDF Service", "Barryvdh Laravel DomPDF:\n- Generate laporan PDF\n- Template rendering\n- Custom styling")
+
+System_Ext(storage, "File Storage", "Laravel Storage:\n- Product images\n- Generated PDFs\n- Log files")
+
+SystemDb(database, "MySQL Database", "Relational Database:\n- Users & Roles\n- Products & Categories\n- Sales & Sale Items\n- Payments")
+
+' ====================
+' RELATIONSHIPS - ADMIN
+' ====================
+Rel(admin, web_app, "Login, manage data, view reports", "HTTPS/Browser")
+Rel(web_app, api, "API calls for data operations", "HTTPS/REST")
+Rel(web_app, pdf_generator, "Generate monthly sales reports", "PHP")
+
+' ====================
+' RELATIONSHIPS - KASIR
+' ====================
+Rel(kasir, mobile_app, "Process sales transactions", "HTTPS/Mobile")
+Rel(mobile_app, api, "API calls for sales & products", "HTTPS/REST")
+
+' ====================
+' RELATIONSHIPS - API & SERVICES
+' ====================
+Rel(api, jwt_service, "Authenticate & authorize requests", "JWT Middleware")
+Rel(api, database, "CRUD operations", "MySQL/Eloquent ORM")
+Rel(api, storage, "Store/retrieve files", "File System")
+
+Rel_Back(jwt_service, database, "Validate user credentials", "MySQL Query")
+Rel(pdf_generator, storage, "Save generated PDFs", "File System")
+
+' ====================
+' NOTES
+' ====================
+note right of web_app
+  **Tech Stack:**
+  - Laravel 10
+  - Blade Templates
+  - Alpine.js
+  - Tailwind CSS
+  - Chart.js
+end note
+
+note right of mobile_app
+  **Features:**
+  - Product scanning
+  - Cart management
+  - Multiple payment methods
+  - Receipt printing
+  - Offline mode (future)
+end note
+
+note bottom of database
+  **Main Tables:**
+  - users, roles
+  - products, categories
+  - sales, sale_items
+  - payments
+end note
+
 @enduml

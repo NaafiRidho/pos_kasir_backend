@@ -1,0 +1,151 @@
+@startuml Sales Report - Activity Diagram
+
+title Activity Diagram - Sales Report Generation & Export (Admin)
+
+|Admin|
+start
+:Access Sales Report Page;
+
+|System|
+:Get current month as default;
+:Calculate statistics:
+- Total sales
+- Total transactions
+- Products sold
+- Average transaction;
+
+:Calculate comparison\nwith previous month;
+
+:Load daily sales data;
+:Load top selling products\n(all products, sorted);
+:Load sales by category;
+
+:Render sales report page with:
+- 4 statistic cards
+- Line chart (daily sales)
+- Top products table
+- Category breakdown;
+
+|Admin|
+if (What action?) then (Change Month)
+    :Select month from dropdown;
+
+    |System|
+    :Submit form with new month;
+    :Recalculate all statistics\nfor selected month;
+    :Reload page with new data;
+
+elseif (View Chart) then
+    |System|
+    :Initialize Chart.js;
+    :Create line chart with gradient:
+    - X-axis: Days of month
+    - Y-axis: Sales amount (Rp)
+    - Tooltips in Rupiah format;
+    :Display interactive chart;
+
+elseif (Print Report) then
+    :Click "Print" button;
+
+    |System|
+    :Apply print CSS:
+    - Hide sidebar/navigation
+    - Full width layout
+    - Preserve colors;
+    :Trigger browser print dialog;
+
+    |Admin|
+    if (Confirm print?) then (yes)
+        :Print report;
+    else (no)
+        :Cancel print;
+    endif
+
+elseif (Export PDF) then
+    :Click "Export PDF" button;
+
+    |System|
+    :Show export modal;
+    :Display month selector\nwith last 12 months;
+
+    |Admin|
+    :Select month to export;
+    :Click "Download PDF";
+
+    |System|
+    :Calculate statistics\nfor selected month;
+    :Load all report data:
+    - Statistics
+    - Top products
+    - Sales by category
+    - Daily sales summary;
+
+    :Render PDF template\n(sales-report-pdf.blade.php);
+
+    :Generate PDF using DomPDF:
+    - Header with store info
+    - Statistics cards
+    - Product table with ranking
+    - Category table
+    - Daily sales table
+    - Footer with timestamp;
+
+    :Save PDF to storage\n(optional);
+
+    :Download PDF file\n"Laporan-Penjualan-{month}.pdf";
+
+    |Admin|
+    :Receive PDF file;
+    :Close modal;
+
+else (Analyze Data)
+    |Admin|
+    :Review statistics cards;
+
+    note right
+        **Statistics Shown:**
+        - Total Sales (Rp) with % change
+        - Total Transactions with % change
+        - Products Sold with % change
+        - Average Transaction (Rp)
+
+        **Color Indicators:**
+        - Green = Increase from last month
+        - Red = Decrease from last month
+    end note
+
+    :Scroll to top products;
+
+    note right
+        **Top Products Features:**
+        - Sorted by quantity sold (desc)
+        - Shows ALL products (scrollable)
+        - Ranking badges (1-3: colored)
+        - Product name & category
+        - Quantity sold & Revenue
+    end note
+
+    :Review category breakdown;
+
+    note right
+        **Category Analysis:**
+        - Sorted by quantity sold
+        - Progress bars (percentage)
+        - Total quantity per category
+        - Total revenue per category
+    end note
+
+    :Examine daily chart;
+
+    note right
+        **Chart Insights:**
+        - Identify peak sales days
+        - Spot trends/patterns
+        - Compare day-to-day
+        - Interactive tooltips
+    end note
+endif
+
+stop
+
+@enduml

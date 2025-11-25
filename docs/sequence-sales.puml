@@ -1,0 +1,44 @@
+@startuml Sales Transaction Flow
+
+title Sales Transaction - Simplified
+
+actor Kasir
+participant App
+participant API
+participant DB
+
+== Create Sale ==
+
+Kasir -> App: Start transaction
+App -> API: POST /api/sales
+API -> DB: Create draft sale
+DB --> API: sale_id
+API --> App: Return sale_id
+App -> Kasir: Show cart
+
+== Add Item ==
+
+Kasir -> App: Scan product
+App -> API: POST /api/sales/items
+API -> DB: Check stock
+
+alt Stock OK
+    API -> DB: Add item + Update stock
+    DB --> API: Success
+    API --> App: Item added
+    App -> Kasir: Update cart
+else No Stock
+    API --> App: Error
+    App -> Kasir: Show error
+end
+
+== Complete ==
+
+Kasir -> App: Process payment
+App -> API: POST /api/sales/complete
+API -> DB: Create payment + Update status
+DB --> API: Success
+API --> App: Receipt data
+App -> Kasir: Show receipt
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml Sales Transaction - Payment & Completion
+
+title Sales Transaction Flow - Part 2: Payment & Completion
+
+actor Kasir
+participant "Mobile App" as App
+participant "API" as API
+participant "SaleController" as Ctrl
+participant "Database" as DB
+
+== Remove Item from Cart ==
+
+Kasir -> App: Remove item
+App -> API: DELETE /api/sales/items/{id}
+API -> Ctrl: remove_item()
+Ctrl -> DB: DELETE sale_item\nRESTORE stock\nUPDATE total
+DB --> Ctrl: Success
+Ctrl --> App: 200 OK
+App --> Kasir: Update cart
+
+== Complete Payment ==
+
+Kasir -> App: Enter payment\n(method, amount)
+App -> API: POST /api/sales/{id}/complete
+API -> Ctrl: complete_sale()
+
+Ctrl -> DB: Get sale total
+DB --> Ctrl: total_amount
+
+alt Payment Valid
+    Ctrl -> DB: INSERT payment\nUPDATE sale status='completed'
+    DB --> Ctrl: Success
+    Ctrl --> App: 200 {receipt_data}
+    App -> App: Generate receipt
+    App --> Kasir: Show receipt
+else Payment < Total
+    Ctrl --> App: 400 "Insufficient"
+    App --> Kasir: Show error
+end
+
+@enduml

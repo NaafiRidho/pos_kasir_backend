@@ -1,0 +1,79 @@
+@startuml POS Kasir - Deployment Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Deployment Diagram - Sistem POS Kasir
+
+Deployment_Node(client_admin, "Admin Workstation", "Windows/macOS/Linux") {
+    Container(browser, "Web Browser", "Chrome/Firefox/Safari", "Akses dashboard admin")
+}
+
+Deployment_Node(client_kasir, "Kasir Device", "Android/iOS") {
+    Container(mobile_app, "Mobile App", "Flutter/React Native", "Aplikasi kasir")
+}
+
+Deployment_Node(web_server, "Web Server", "Laragon/XAMPP (Development)") {
+    Deployment_Node(php_runtime, "PHP Runtime", "PHP 8.1+") {
+        Container(laravel_app, "Laravel Application", "Laravel 10", "Backend API & Web UI:\n- Web Routes\n- API Routes\n- Controllers\n- Models\n- Views")
+
+        Container(composer, "Dependencies", "Composer", "PHP packages:\n- tymon/jwt-auth\n- barryvdh/dompdf\n- guzzlehttp/guzzle")
+    }
+
+    Deployment_Node(web_assets, "Public Directory", "public/") {
+        Container(static_files, "Static Assets", "CSS/JS/Images", "- Tailwind CSS (CDN)\n- Alpine.js (CDN)\n- Chart.js (CDN)\n- Font Awesome (CDN)\n- Product images")
+    }
+}
+
+Deployment_Node(database_server, "Database Server", "MySQL 8.0") {
+    ContainerDb(mysql_db, "POS Database", "MySQL", "Tables:\n- users, roles\n- products, categories\n- sales, sale_items\n- payments")
+}
+
+Deployment_Node(file_server, "Storage Server", "Local File System") {
+    Container(storage_disk, "Storage", "storage/", "- app/public/\n- framework/\n- logs/\n- Generated PDFs")
+}
+
+' Relationships
+Rel(browser, laravel_app, "HTTPS requests", "Port 80/443")
+Rel(mobile_app, laravel_app, "API requests", "REST/HTTPS")
+
+Rel(laravel_app, mysql_db, "Database queries", "MySQL Protocol:3306")
+Rel(laravel_app, storage_disk, "Read/Write files", "File I/O")
+Rel(browser, static_files, "Load assets", "HTTP")
+
+' Notes
+note right of web_server
+  **Development Environment:**
+  - Laragon (Windows)
+  - PHP 8.1+ with extensions:
+    * OpenSSL
+    * PDO MySQL
+    * Mbstring
+    * Tokenizer
+    * XML
+    * Ctype
+    * JSON
+  - Composer 2.x
+end note
+
+note right of database_server
+  **Database Configuration:**
+  - MySQL 8.0+
+  - InnoDB engine
+  - utf8mb4 charset
+  - Port: 3306
+  - User: root (dev)
+end note
+
+note bottom of laravel_app
+  **Laravel Configuration:**
+  - APP_ENV=local
+  - APP_DEBUG=true
+  - JWT_SECRET configured
+  - CORS enabled for mobile
+  - Session driver: file
+end note
+
+SHOW_LEGEND()
+
+@enduml

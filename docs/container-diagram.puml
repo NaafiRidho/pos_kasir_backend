@@ -1,0 +1,58 @@
+@startuml POS Kasir - Container Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container Diagram - Sistem POS Kasir
+
+Person(admin, "Admin/Owner", "Mengelola toko")
+Person(kasir, "Kasir", "Melakukan transaksi")
+
+System_Boundary(pos, "Sistem POS Kasir") {
+
+    Container(web_ui, "Web Application", "Laravel Blade, Alpine.js, Tailwind", "UI untuk admin mengelola data dan melihat laporan")
+
+    Container(mobile_ui, "Mobile App", "Flutter/React Native", "UI untuk kasir melakukan transaksi penjualan")
+
+    Container(web_controller, "Web Controllers", "Laravel PHP", "Handle web routes:\n- AuthController\n- DashboardController\n- ProductController\n- CategoryController\n- UsersController\n- SalesReportController")
+
+    Container(api_controller, "API Controllers", "Laravel PHP", "Handle API endpoints:\n- Api\\AuthController\n- Api\\ProductController\n- Api\\CategoryController\n- Api\\UsersController\n- Api\\SaleController")
+
+    Container(middleware, "Middleware Layer", "Laravel Middleware", "Security & validation:\n- jwt.cookie (web)\n- jwt.verify (API)\n- role:Admin\n- CORS")
+
+    Container(business_logic, "Business Logic", "Laravel Models & Services", "Core business operations:\n- User, Role\n- Product, Category\n- Sale, SaleItem, Payment")
+
+    ContainerDb(database, "Database", "MySQL 8.0", "Stores all application data:\n- Authentication data\n- Products & categories\n- Sales transactions\n- Reports data")
+
+    Container(pdf_service, "PDF Generator", "DomPDF", "Generate sales reports in PDF format")
+
+    Container(storage, "File Storage", "Laravel Storage", "Store uploaded files:\n- Product images\n- Generated PDFs")
+}
+
+System_Ext(jwt_lib, "JWT Library", "Tymon JWT-Auth")
+
+' Admin Flow
+Rel(admin, web_ui, "Access via browser", "HTTPS")
+Rel(web_ui, web_controller, "Submit forms, requests", "HTTP/Web")
+Rel(web_controller, middleware, "Pass through", "")
+Rel(middleware, jwt_lib, "Verify JWT cookie", "")
+
+' Kasir Flow
+Rel(kasir, mobile_ui, "Use mobile app", "HTTPS")
+Rel(mobile_ui, api_controller, "API requests", "REST/JSON")
+Rel(api_controller, middleware, "Pass through", "")
+Rel(middleware, jwt_lib, "Verify JWT token", "Bearer")
+
+' Backend Flow
+Rel(web_controller, business_logic, "Call business methods", "")
+Rel(api_controller, business_logic, "Call business methods", "")
+Rel(business_logic, database, "Read/Write via Eloquent ORM", "MySQL")
+
+' PDF & Storage
+Rel(web_controller, pdf_service, "Generate PDF reports", "PHP")
+Rel(pdf_service, storage, "Save PDF files", "File System")
+Rel(api_controller, storage, "Upload/retrieve images", "File System")
+
+Rel_Back(jwt_lib, database, "Validate credentials", "MySQL")
+
+@enduml

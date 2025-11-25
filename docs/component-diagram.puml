@@ -1,0 +1,141 @@
+@startuml POS Kasir - Component Diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_TOP_DOWN()
+
+title Component Diagram - Backend API Components
+
+Person(user, "User", "Admin/Kasir")
+
+Container_Boundary(web, "Web Layer") {
+    Component(routes_web, "Web Routes", "web.php", "Web routing:\n- Login/Logout\n- Dashboard\n- CRUD Pages")
+
+    Component(routes_api, "API Routes", "api.php", "API routing:\n- Auth endpoints\n- Resource endpoints")
+}
+
+Container_Boundary(middleware, "Middleware Layer") {
+    Component(jwt_cookie, "JWT Cookie", "Middleware", "Extract JWT from cookie")
+    Component(jwt_verify, "JWT Verify", "Middleware", "Verify JWT token")
+    Component(role_check, "Role Check", "Middleware", "Check user role (Admin)")
+    Component(cors, "CORS", "Middleware", "Handle CORS headers")
+}
+
+Container_Boundary(controllers, "Controllers") {
+    Component(auth_ctrl, "AuthController", "Controller", "- login()\n- logout()\n- refresh()\n- me()")
+
+    Component(dashboard_ctrl, "DashboardController", "Controller", "- index() → dashboard\n- category() → categories page")
+
+    Component(product_ctrl, "ProductController", "Controller", "- index()\n- API: CRUD products\n- upload_product_image()")
+
+    Component(category_ctrl, "CategoryController", "Controller", "- list_categories()\n- add_category()\n- edit_category()\n- delete_category()")
+
+    Component(user_ctrl, "UsersController", "Controller", "- manage() → users page\n- API: CRUD users")
+
+    Component(sale_ctrl, "SaleController", "Controller", "- create_sale()\n- add_item()\n- remove_item()\n- get_sale()")
+
+    Component(report_ctrl, "SalesReportController", "Controller", "- index() → sales report\n- exportPdf()")
+}
+
+Container_Boundary(models, "Models (Eloquent ORM)") {
+    Component(user_model, "User", "Model", "Authentication\nRelations: Role")
+    Component(role_model, "Role", "Model", "User roles")
+    Component(product_model, "Product", "Model", "Relations: Category")
+    Component(category_model, "Category", "Model", "Product categorization")
+    Component(sale_model, "Sale", "Model", "Relations:\nSaleItem, Payment, User")
+    Component(sale_item_model, "SaleItem", "Model", "Relations:\nSale, Product")
+    Component(payment_model, "Payment", "Model", "Relations: Sale")
+}
+
+Container_Boundary(views, "Views (Blade Templates)") {
+    Component(auth_views, "auth/", "Views", "- login.blade.php")
+    Component(page_views, "pages/", "Views", "- dashboard.blade.php")
+    Component(category_views, "categories/", "Views", "- index.blade.php")
+    Component(product_views, "products/", "Views", "- index.blade.php")
+    Component(user_views, "users/", "Views", "- index.blade.php")
+    Component(report_views, "reports/", "Views", "- sales.blade.php\n- sales-report-pdf.blade.php")
+    Component(layout, "layouts/", "Views", "- app.blade.php")
+    Component(components, "components/", "Views", "- modals/\n- pagination/")
+}
+
+Container_Boundary(services, "External Services") {
+    Component(jwt_service, "JWT Service", "Tymon\\JWTAuth", "Token management")
+    Component(pdf_service, "PDF Service", "DomPDF", "PDF generation")
+}
+
+ContainerDb(db, "Database", "MySQL", "Data persistence")
+Container(storage, "Storage", "File System", "Files storage")
+
+' User to Routes
+Rel(user, routes_web, "HTTP requests", "HTTPS")
+Rel(user, routes_api, "API requests", "REST/JSON")
+
+' Routes to Middleware
+Rel(routes_web, jwt_cookie, "Pass through", "")
+Rel(routes_api, jwt_verify, "Pass through", "")
+Rel(jwt_cookie, role_check, "Chain", "")
+Rel(jwt_verify, role_check, "Chain", "")
+
+' Middleware to Controllers
+Rel(role_check, auth_ctrl, "Route to", "")
+Rel(role_check, dashboard_ctrl, "Route to", "")
+Rel(role_check, product_ctrl, "Route to", "")
+Rel(role_check, category_ctrl, "Route to", "")
+Rel(role_check, user_ctrl, "Route to", "")
+Rel(role_check, sale_ctrl, "Route to", "")
+Rel(role_check, report_ctrl, "Route to", "")
+
+' Controllers to Models
+Rel(auth_ctrl, user_model, "Uses", "")
+Rel(auth_ctrl, role_model, "Uses", "")
+Rel(dashboard_ctrl, sale_model, "Uses", "")
+Rel(dashboard_ctrl, product_model, "Uses", "")
+Rel(product_ctrl, product_model, "Uses", "")
+Rel(product_ctrl, category_model, "Uses", "")
+Rel(category_ctrl, category_model, "Uses", "")
+Rel(user_ctrl, user_model, "Uses", "")
+Rel(user_ctrl, role_model, "Uses", "")
+Rel(sale_ctrl, sale_model, "Uses", "")
+Rel(sale_ctrl, sale_item_model, "Uses", "")
+Rel(sale_ctrl, payment_model, "Uses", "")
+Rel(report_ctrl, sale_model, "Uses", "")
+Rel(report_ctrl, sale_item_model, "Uses", "")
+
+' Controllers to Views
+Rel(auth_ctrl, auth_views, "Renders", "")
+Rel(dashboard_ctrl, page_views, "Renders", "")
+Rel(dashboard_ctrl, category_views, "Renders", "")
+Rel(product_ctrl, product_views, "Renders", "")
+Rel(user_ctrl, user_views, "Renders", "")
+Rel(report_ctrl, report_views, "Renders", "")
+
+' Views use Layout & Components
+Rel(auth_views, layout, "Extends", "")
+Rel(page_views, layout, "Extends", "")
+Rel(category_views, layout, "Extends", "")
+Rel(category_views, components, "Includes", "")
+Rel(product_views, layout, "Extends", "")
+Rel(product_views, components, "Includes", "")
+Rel(user_views, layout, "Extends", "")
+Rel(user_views, components, "Includes", "")
+Rel(report_views, layout, "Extends", "")
+
+' Models to Database
+Rel(user_model, db, "Read/Write", "Eloquent")
+Rel(role_model, db, "Read/Write", "Eloquent")
+Rel(product_model, db, "Read/Write", "Eloquent")
+Rel(category_model, db, "Read/Write", "Eloquent")
+Rel(sale_model, db, "Read/Write", "Eloquent")
+Rel(sale_item_model, db, "Read/Write", "Eloquent")
+Rel(payment_model, db, "Read/Write", "Eloquent")
+
+' Services
+Rel(auth_ctrl, jwt_service, "Generate/verify tokens", "")
+Rel(jwt_cookie, jwt_service, "Verify token", "")
+Rel(jwt_verify, jwt_service, "Verify token", "")
+Rel(report_ctrl, pdf_service, "Generate PDF", "")
+
+' Storage
+Rel(product_ctrl, storage, "Upload images", "")
+Rel(pdf_service, storage, "Save PDFs", "")
+
+@enduml
