@@ -67,4 +67,7 @@ Route::group(['prefix' => 'sales'], function () {
 
     // Fetch a sale with its items
     Route::get('/{saleId}', [SaleController::class, 'get_sale']);
+
+    // Delete a draft sale
+    Route::delete('/{saleId}', [SaleController::class, 'delete_sale']);
 });

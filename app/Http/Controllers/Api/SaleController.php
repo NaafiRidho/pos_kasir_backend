@@ -171,4 +171,43 @@ class SaleController extends Controller
             return Response::error($e);
         }
     }
+
+    /**
+     * Delete a sale and restore product stock.
+     * Only draft sales can be deleted.
+     */
+    public function delete_sale($saleId): JsonResponse
+    {
+        try {
+            $sale = Sale::with('items')->find($saleId);
+            if (! $sale) {
+                return Response::notFound('Sale not found');
+            }
+
+            // Prevent deletion of completed sales
+            if ($sale->payment_status !== 'draft') {
+                return Response::error(null, 'Cannot delete completed sales', 400);
+            }
+
+            return DB::transaction(function () use ($sale) {
+                // Restore stock for all items
+                foreach ($sale->items as $item) {
+                    $product = Product::lockForUpdate()->find($item->product_id);
+                    if ($product && $item->quantity > 0) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+
+                // Delete all sale items first (foreign key constraint)
+                SaleItem::where('sale_id', $sale->sale_id)->delete();
+
+                // Delete the sale
+                $sale->delete();
+
+                return Response::success(null, 'Sale deleted successfully');
+            });
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
+    }
 }
