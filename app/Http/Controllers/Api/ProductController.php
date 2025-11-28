@@ -98,6 +98,28 @@ class ProductController extends Controller
     }
 
     /**
+     * Add stock to existing product.
+     */
+    public function add_stock(Request $request, $id): JsonResponse
+    {
+        try {
+            $product = Product::find($id);
+            if (! $product) return Response::notFound('Product not found');
+
+            $data = $request->validate([
+                'quantity' => 'required|integer|min:1',
+            ]);
+
+            $product->stock += $data['quantity'];
+            $product->save();
+
+            return Response::success($product, 'Stock added successfully');
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
+    }
+
+    /**
      * List products with optional filters.
      */
     public function list_product(Request $request): JsonResponse

@@ -53,6 +53,7 @@ Route::group(['prefix' => 'products'], function () {
     Route::get('/{id}', [ProductController::class, 'detail_product']);
     Route::post('/add_product', [ProductController::class, 'add_product']);
     Route::post('/upload_image', [ProductController::class, 'upload_product_image']); // jika dipisah
+    Route::post('/{id}/add_stock', [ProductController::class, 'add_stock']);
     Route::put('/{id}', [ProductController::class, 'edit_product']);
     Route::delete('/{id}', [ProductController::class, 'delete_product']);
 });

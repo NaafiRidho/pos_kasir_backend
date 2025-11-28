@@ -7,6 +7,7 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesReportController;
+use App\Http\Controllers\StockAdditionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,11 +46,23 @@ Route::group(['prefix' => 'categories'], function () {
 // Authentication (web session)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
-Route::middleware(['jwt.cookie', 'role:Admin'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Routes untuk role_id = 1 (Admin/Owner) dan role_id = 2 (Gudang)
+Route::middleware(['jwt.cookie', 'role:Admin,Gudang'])->group(function () {
     Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
     Route::get("/category", [DashboardController::class, 'category']);
     Route::get('/products', [ProductController::class, 'index'])->name('products.manage');
     Route::get('/laporan-penjualan', [SalesReportController::class, 'index'])->name('sales.report');
     Route::get('/laporan-penjualan/export-pdf', [SalesReportController::class, 'exportPdf'])->name('sales.report.pdf');
+});
+
+Route::middleware(['jwt.cookie', 'role:Admin,Gudang'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+
+// Routes untuk role_id = 3 (Kasir) dan role_id = 1 (Admin)
+Route::middleware(['jwt.cookie', 'role:Gudang'])->group(function () {
+    Route::get('/stock-additions', [StockAdditionController::class, 'index'])->name('stock-additions.index');
+    Route::get('/stock-additions/create', [StockAdditionController::class, 'create'])->name('stock-additions.create');
+    Route::post('/stock-additions', [StockAdditionController::class, 'store'])->name('stock-additions.store');
+    Route::delete('/stock-additions/{id}', [StockAdditionController::class, 'destroy'])->name('stock-additions.destroy');
 });

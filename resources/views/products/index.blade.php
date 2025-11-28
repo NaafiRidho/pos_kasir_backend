@@ -118,7 +118,8 @@
             <tbody class="divide-y divide-gray-100">
 
                 @forelse ($products as $p)
-                <tr class="transition hover:bg-gray-50">
+                <tr class="transition hover:bg-gray-50" x-init="stockInputs[{{ $p->product_id }}] = ''">
+
 
                     <td class="px-4 py-3 font-mono text-gray-700">
                         PRD{{ str_pad($p->product_id, 3, '0', STR_PAD_LEFT) }}
@@ -162,7 +163,6 @@
             document.getElementById('edit_name').value = @js($p->name);
             document.getElementById('edit_cost_price').value = @js($p->cost_price);
             document.getElementById('edit_selling_price').value = @js($p->selling_price);
-            document.getElementById('edit_stock').value = @js($p->stock);
             document.getElementById('edit_description').value = @js($p->description);
             document.getElementById('edit_categoty_id').value='{{ $p->categories_id }}';
 
@@ -225,6 +225,7 @@ function productData() {
         showDeleteModal: false,
         product: null,
         jwtToken: null,
+        stockInputs: {},
 
         init() {
             this.jwtToken = (() => {
@@ -335,7 +336,53 @@ function productData() {
         console.error(err);
         Swal.fire({icon:'error', title:'Kesalahan', text: err.message});
     }
-}
+},
+
+        async addStock(productId) {
+            const quantity = this.stockInputs[productId];
+
+            if (!quantity || quantity < 1) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Masukkan jumlah stok yang valid (minimal 1)',
+                    confirmButtonColor: '#7c3aed'
+                });
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/products/${productId}/add_stock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Authorization': `Bearer ${this.jwtToken}`
+                    },
+                    body: JSON.stringify({ quantity: parseInt(quantity) })
+                });
+
+                const result = await res.json();
+
+                if (!res.ok) throw new Error(result.meta?.message || 'Gagal menambah stok');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: `Stok berhasil ditambahkan: +${quantity} pcs`,
+                    confirmButtonColor: '#7c3aed'
+                }).then(() => location.reload());
+
+            } catch(err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan',
+                    text: err.message
+                });
+            }
+        }
 
     }
 }
