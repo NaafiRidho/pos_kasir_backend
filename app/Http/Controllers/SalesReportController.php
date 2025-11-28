@@ -14,53 +14,53 @@ class SalesReportController extends Controller
 {
     public function index(Request $request)
     {
-        // Get selected month and year from request, default to current month
-        $selectedMonth = $request->input('month', now()->format('Y-m'));
-        $date = Carbon::parse($selectedMonth . '-01');
+        // Get date range from request, default to current month
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
 
-        $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
+        $startOfPeriod = Carbon::parse($startDate)->startOfDay();
+        $endOfPeriod = Carbon::parse($endDate)->endOfDay();
 
-        // Previous month for comparison
-        $previousMonth = $date->copy()->subMonth();
-        $previousMonthStart = $previousMonth->copy()->startOfMonth();
-        $previousMonthEnd = $previousMonth->copy()->endOfMonth();
+        // Calculate previous period duration for comparison
+        $periodDays = $startOfPeriod->diffInDays($endOfPeriod) + 1;
+        $previousPeriodEnd = $startOfPeriod->copy()->subDay();
+        $previousPeriodStart = $previousPeriodEnd->copy()->subDays($periodDays - 1)->startOfDay();
 
-        // Monthly Statistics
-        $totalSales = (float) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+        // Period Statistics
+        $totalSales = (float) Sale::whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->sum('total_amount');
 
-        $totalTransactions = (int) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+        $totalTransactions = (int) Sale::whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->count();
 
-        $totalProductsSold = (int) SaleItem::whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-            $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+        $totalProductsSold = (int) SaleItem::whereHas('sale', function ($q) use ($startOfPeriod, $endOfPeriod) {
+            $q->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod]);
         })->sum('quantity');
 
         $averageTransaction = $totalTransactions > 0 ? $totalSales / $totalTransactions : 0;
 
-        // Previous month statistics for comparison
-        $previousMonthSales = (float) Sale::whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd])
+        // Previous period statistics for comparison
+        $previousPeriodSales = (float) Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
             ->sum('total_amount');
 
-        $previousMonthTransactions = (int) Sale::whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd])
+        $previousPeriodTransactions = (int) Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
 
-        $previousMonthProducts = (int) SaleItem::whereHas('sale', function ($q) use ($previousMonthStart, $previousMonthEnd) {
-            $q->whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd]);
+        $previousPeriodProducts = (int) SaleItem::whereHas('sale', function ($q) use ($previousPeriodStart, $previousPeriodEnd) {
+            $q->whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd]);
         })->sum('quantity');
 
         // Calculate percentage changes
-        $salesChange = $previousMonthSales > 0
-            ? (($totalSales - $previousMonthSales) / $previousMonthSales) * 100
+        $salesChange = $previousPeriodSales > 0
+            ? (($totalSales - $previousPeriodSales) / $previousPeriodSales) * 100
             : ($totalSales > 0 ? 100 : 0);
 
-        $transactionsChange = $previousMonthTransactions > 0
-            ? (($totalTransactions - $previousMonthTransactions) / $previousMonthTransactions) * 100
+        $transactionsChange = $previousPeriodTransactions > 0
+            ? (($totalTransactions - $previousPeriodTransactions) / $previousPeriodTransactions) * 100
             : ($totalTransactions > 0 ? 100 : 0);
 
-        $productsChange = $previousMonthProducts > 0
-            ? (($totalProductsSold - $previousMonthProducts) / $previousMonthProducts) * 100
+        $productsChange = $previousPeriodProducts > 0
+            ? (($totalProductsSold - $previousPeriodProducts) / $previousPeriodProducts) * 100
             : ($totalProductsSold > 0 ? 100 : 0);
 
         // Daily sales data for chart
@@ -68,7 +68,7 @@ class SalesReportController extends Controller
                 DB::raw('DATE(sale_date) as date'),
                 DB::raw('SUM(total_amount) as total')
             )
-            ->whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -76,14 +76,16 @@ class SalesReportController extends Controller
         // Prepare chart data (fill missing dates with 0)
         $chartLabels = [];
         $chartData = [];
-        $daysInMonth = $startOfMonth->daysInMonth;
+        $currentDate = $startOfPeriod->copy();
 
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $currentDate = $startOfMonth->copy()->day($day)->format('Y-m-d');
-            $chartLabels[] = $day;
+        while ($currentDate <= $endOfPeriod) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $chartLabels[] = $currentDate->format('d/m');
 
-            $dayData = $dailySales->firstWhere('date', $currentDate);
+            $dayData = $dailySales->firstWhere('date', $dateStr);
             $chartData[] = $dayData ? (float) $dayData->total : 0;
+
+            $currentDate->addDay();
         }
 
         // All selling products sorted by quantity
@@ -92,8 +94,8 @@ class SalesReportController extends Controller
                 DB::raw('SUM(quantity) as total_quantity'),
                 DB::raw('SUM(subtotal) as total_revenue')
             )
-            ->whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-                $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+            ->whereHas('sale', function ($q) use ($startOfPeriod, $endOfPeriod) {
+                $q->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod]);
             })
             ->with('product.category')
             ->groupBy('product_id')
@@ -111,23 +113,14 @@ class SalesReportController extends Controller
                 DB::raw('SUM(sale_items.quantity) as total_quantity'),
                 DB::raw('SUM(sale_items.subtotal) as total_revenue')
             )
-            ->whereBetween('sales.sale_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('sales.sale_date', [$startOfPeriod, $endOfPeriod])
             ->groupBy('categories.categories_id', 'categories.name')
-            ->orderByDesc('total_revenue')
+            ->orderByDesc('total_quantity')
             ->get();
 
-        // Generate month options for dropdown (last 12 months)
-        $monthOptions = [];
-        for ($i = 0; $i < 12; $i++) {
-            $monthDate = now()->subMonths($i);
-            $monthOptions[] = [
-                'value' => $monthDate->format('Y-m'),
-                'label' => $monthDate->locale('id')->translatedFormat('F Y')
-            ];
-        }
-
         return view('reports.sales', compact(
-            'selectedMonth',
+            'startDate',
+            'endDate',
             'totalSales',
             'totalTransactions',
             'totalProductsSold',
@@ -139,61 +132,60 @@ class SalesReportController extends Controller
             'chartData',
             'topProducts',
             'salesByCategory',
-            'monthOptions',
-            'startOfMonth',
-            'endOfMonth'
+            'startOfPeriod',
+            'endOfPeriod'
         ));
     }
 
     public function exportPdf(Request $request)
     {
-        // Get selected month from request
-        $selectedMonth = $request->input('month', now()->format('Y-m'));
-        $date = Carbon::parse($selectedMonth . '-01');
+        // Get date range from request
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
 
-        $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
+        $startOfPeriod = Carbon::parse($startDate)->startOfDay();
+        $endOfPeriod = Carbon::parse($endDate)->endOfDay();
 
-        // Previous month for comparison
-        $previousMonth = $date->copy()->subMonth();
-        $previousMonthStart = $previousMonth->copy()->startOfMonth();
-        $previousMonthEnd = $previousMonth->copy()->endOfMonth();
+        // Calculate previous period for comparison
+        $periodDays = $startOfPeriod->diffInDays($endOfPeriod) + 1;
+        $previousPeriodEnd = $startOfPeriod->copy()->subDay();
+        $previousPeriodStart = $previousPeriodEnd->copy()->subDays($periodDays - 1)->startOfDay();
 
-        // Monthly Statistics
-        $totalSales = (float) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+        // Period Statistics
+        $totalSales = (float) Sale::whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->sum('total_amount');
 
-        $totalTransactions = (int) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+        $totalTransactions = (int) Sale::whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->count();
 
-        $totalProductsSold = (int) SaleItem::whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-            $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+        $totalProductsSold = (int) SaleItem::whereHas('sale', function ($q) use ($startOfPeriod, $endOfPeriod) {
+            $q->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod]);
         })->sum('quantity');
 
         $averageTransaction = $totalTransactions > 0 ? $totalSales / $totalTransactions : 0;
 
-        // Previous month statistics for comparison
-        $previousMonthSales = (float) Sale::whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd])
+        // Previous period statistics for comparison
+        $previousPeriodSales = (float) Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
             ->sum('total_amount');
 
-        $previousMonthTransactions = (int) Sale::whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd])
+        $previousPeriodTransactions = (int) Sale::whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd])
             ->count();
 
-        $previousMonthProducts = (int) SaleItem::whereHas('sale', function ($q) use ($previousMonthStart, $previousMonthEnd) {
-            $q->whereBetween('sale_date', [$previousMonthStart, $previousMonthEnd]);
+        $previousPeriodProducts = (int) SaleItem::whereHas('sale', function ($q) use ($previousPeriodStart, $previousPeriodEnd) {
+            $q->whereBetween('sale_date', [$previousPeriodStart, $previousPeriodEnd]);
         })->sum('quantity');
 
         // Calculate percentage changes
-        $salesChange = $previousMonthSales > 0
-            ? (($totalSales - $previousMonthSales) / $previousMonthSales) * 100
+        $salesChange = $previousPeriodSales > 0
+            ? (($totalSales - $previousPeriodSales) / $previousPeriodSales) * 100
             : ($totalSales > 0 ? 100 : 0);
 
-        $transactionsChange = $previousMonthTransactions > 0
-            ? (($totalTransactions - $previousMonthTransactions) / $previousMonthTransactions) * 100
+        $transactionsChange = $previousPeriodTransactions > 0
+            ? (($totalTransactions - $previousPeriodTransactions) / $previousPeriodTransactions) * 100
             : ($totalTransactions > 0 ? 100 : 0);
 
-        $productsChange = $previousMonthProducts > 0
-            ? (($totalProductsSold - $previousMonthProducts) / $previousMonthProducts) * 100
+        $productsChange = $previousPeriodProducts > 0
+            ? (($totalProductsSold - $previousPeriodProducts) / $previousPeriodProducts) * 100
             : ($totalProductsSold > 0 ? 100 : 0);
 
         // All selling products sorted by quantity
@@ -202,8 +194,8 @@ class SalesReportController extends Controller
                 DB::raw('SUM(quantity) as total_quantity'),
                 DB::raw('SUM(subtotal) as total_revenue')
             )
-            ->whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-                $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+            ->whereHas('sale', function ($q) use ($startOfPeriod, $endOfPeriod) {
+                $q->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod]);
             })
             ->with('product.category')
             ->groupBy('product_id')
@@ -221,7 +213,7 @@ class SalesReportController extends Controller
                 DB::raw('SUM(sale_items.quantity) as total_quantity'),
                 DB::raw('SUM(sale_items.subtotal) as total_revenue')
             )
-            ->whereBetween('sales.sale_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('sales.sale_date', [$startOfPeriod, $endOfPeriod])
             ->groupBy('categories.categories_id', 'categories.name')
             ->orderByDesc('total_quantity')
             ->get();
@@ -232,15 +224,16 @@ class SalesReportController extends Controller
                 DB::raw('COUNT(*) as transaction_count'),
                 DB::raw('SUM(total_amount) as total')
             )
-            ->whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+            ->whereBetween('sale_date', [$startOfPeriod, $endOfPeriod])
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        $periodLabel = $date->locale('id')->translatedFormat('F Y');
+        $periodLabel = $startOfPeriod->format('d/m/Y') . ' - ' . $endOfPeriod->format('d/m/Y');
 
         $data = compact(
-            'selectedMonth',
+            'startDate',
+            'endDate',
             'periodLabel',
             'totalSales',
             'totalTransactions',
@@ -252,13 +245,13 @@ class SalesReportController extends Controller
             'topProducts',
             'salesByCategory',
             'dailySales',
-            'startOfMonth',
-            'endOfMonth'
+            'startOfPeriod',
+            'endOfPeriod'
         );
 
         $pdf = Pdf::loadView('reports.sales-report-pdf', $data)
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Laporan-Penjualan-' . $selectedMonth . '.pdf');
+        return $pdf->download('Laporan-Penjualan-' . $startDate . '-to-' . $endDate . '.pdf');
     }
 }

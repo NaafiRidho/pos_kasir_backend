@@ -15,21 +15,26 @@
         </div>
 
         <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            {{-- Month Filter --}}
-            <div class="flex items-center gap-3">
-                <label class="text-sm font-semibold text-gray-900 md:text-white">Periode:</label>
-                <form method="GET" action="{{ route('sales.report') }}" id="monthFilterForm">
-                    <select name="month"
-                            onchange="document.getElementById('monthFilterForm').submit()"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                        @foreach($monthOptions as $option)
-                            <option value="{{ $option['value'] }}" {{ $selectedMonth == $option['value'] ? 'selected' : '' }}>
-                                {{ $option['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
+            {{-- Date Range Filter --}}
+            <form method="GET" action="{{ route('sales.report') }}" id="dateRangeForm" class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-semibold text-gray-900 md:text-white">Dari:</label>
+                    <input type="date"
+                           name="start_date"
+                           value="{{ $startDate }}"
+                           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-semibold text-gray-900 md:text-white">Sampai:</label>
+                    <input type="date"
+                           name="end_date"
+                           value="{{ $endDate }}"
+                           class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+                <button type="submit" class="px-4 py-2 text-sm font-semibold text- transition rounded-lg shadow-md" style="background-color: #D7AC28;" onmouseover="this.style.backgroundColor='#c29a23'" onmouseout="this.style.backgroundColor='#D7AC28'">
+                    <i class="fa-solid fa-filter"></i> Filter
+                </button>
+            </form>
 
             {{-- Action Buttons --}}
             <div class="flex gap-2">
@@ -57,7 +62,7 @@
                             @endif
                             {{ $salesChange > 0 ? '+' : '' }}{{ number_format($salesChange, 1) }}%
                         </span>
-                        <span class="text-[10px] text-gray-500">vs bulan lalu</span>
+                        <span class="text-[10px] text-gray-500">vs periode sebelumnya</span>
                     </div>
                 </div>
                 <div class="p-3 text-purple-600 rounded-xl bg-purple-100/70">
@@ -81,7 +86,7 @@
                             @endif
                             {{ $transactionsChange > 0 ? '+' : '' }}{{ number_format($transactionsChange, 1) }}%
                         </span>
-                        <span class="text-[10px] text-gray-500">vs bulan lalu</span>
+                        <span class="text-[10px] text-gray-500">vs periode sebelumnya</span>
                     </div>
                 </div>
                 <div class="p-3 text-indigo-600 rounded-xl bg-indigo-100/70">
@@ -105,7 +110,7 @@
                             @endif
                             {{ $productsChange > 0 ? '+' : '' }}{{ number_format($productsChange, 1) }}%
                         </span>
-                        <span class="text-[10px] text-gray-500">vs bulan lalu</span>
+                        <span class="text-[10px] text-gray-500">vs periode sebelumnya</span>
                     </div>
                 </div>
                 <div class="p-3 text-teal-600 rounded-xl bg-teal-100/70">
@@ -233,23 +238,27 @@
             </div>
 
             <div class="px-6 py-5">
-                <p class="text-sm text-gray-600 mb-4">Pilih periode bulan yang ingin diekspor:</p>
+                <p class="text-sm text-gray-600 mb-4">Tentukan rentang tanggal yang ingin diekspor:</p>
 
                 <div class="space-y-3">
                     <div>
-                        <label class="text-sm font-semibold text-gray-700">Bulan</label>
-                        <select x-model="exportMonth" class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">
-                            @foreach($monthOptions as $option)
-                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-sm font-semibold text-gray-700">Tanggal Mulai</label>
+                        <input type="date"
+                               x-model="exportStartDate"
+                               class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Tanggal Selesai</label>
+                        <input type="date"
+                               x-model="exportEndDate"
+                               class="mt-1 w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition">
                     </div>
 
                     <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                         <div class="flex items-start gap-2">
                             <i class="fa-solid fa-circle-info text-purple-600 mt-0.5"></i>
                             <p class="text-xs text-purple-800">
-                                Laporan akan berisi statistik penjualan, produk terlaris, dan ringkasan harian untuk periode yang dipilih.
+                                Laporan akan berisi statistik penjualan, produk terlaris, dan ringkasan harian untuk rentang tanggal yang dipilih.
                             </p>
                         </div>
                     </div>
@@ -316,7 +325,8 @@
 function salesReportData() {
     return {
         showExportModal: false,
-        exportMonth: '{{ $selectedMonth }}',
+        exportStartDate: '{{ $startDate }}',
+        exportEndDate: '{{ $endDate }}',
 
         init() {
             this.initChart();
@@ -403,7 +413,17 @@ function salesReportData() {
         },
 
         exportPdf() {
-            const url = `{{ route('sales.report.pdf') }}?month=${this.exportMonth}`;
+            if (!this.exportStartDate || !this.exportEndDate) {
+                Swal.fire({
+                    title: 'Perhatian',
+                    text: 'Harap isi tanggal mulai dan selesai',
+                    icon: 'warning',
+                    confirmButtonColor: '#7c3aed'
+                });
+                return;
+            }
+
+            const url = `{{ route('sales.report.pdf') }}?start_date=${this.exportStartDate}&end_date=${this.exportEndDate}`;
             window.location.href = url;
             this.showExportModal = false;
 
