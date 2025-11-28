@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('Logo & APP.png') }}">
     <title>Dashboard - Toko Saya</title>
 
     <!-- CSS FONT AWESOME DI SINI -->
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -15,9 +16,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .bg-sidebar { background: linear-gradient(180deg, #7C3AED 0%, #6D28D9 100%); }
-        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bg-sidebar {
+            background: linear-gradient(180deg, #7C3AED 0%, #6D28D9 100%);
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -26,10 +35,7 @@
     <div class="flex h-screen overflow-hidden">
 
         <!-- BACKDROP (mobile only) -->
-        <div
-            class="fixed inset-0 z-20 bg-black/40 md:hidden"
-            x-show="openSidebar"
-            x-transition.opacity
+        <div class="fixed inset-0 z-20 bg-black/40 md:hidden" x-show="openSidebar" x-transition.opacity
             @click="openSidebar = false">
         </div>
 
@@ -55,89 +61,94 @@
             <!-- NAV -->
             <nav class="flex-1 px-4 mt-4 space-y-2">
 
-                @if(auth()->check() && in_array(auth()->user()->role_id, [1]))
-                <a href="/dashboard"
-                   class="{{ request()->is('dashboard') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Dashboard</span>
-                </a>
+                @if (auth()->check() && in_array(auth()->user()->role_id, [1]))
+                    <a href="/dashboard"
+                        class="{{ request()->is('dashboard') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
 
-                <a href="/category"
-                   class="{{ request()->is('category') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Kategori</span>
-                </a>
+                    <a href="/category"
+                        class="{{ request()->is('category') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Kategori</span>
+                    </a>
 
-                <a href="/products"
-                class="{{ request()->is('products') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                    <span class="font-medium">Produk</span>
-                </a>
+                    <a href="/products"
+                        class="{{ request()->is('products') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <span class="font-medium">Produk</span>
+                    </a>
 
-                <a href="{{ route('users.manage') }}"
-                class="{{ request()->is('users') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    <span class="font-medium">User</span>
-                </a>
+                    <a href="{{ route('users.manage') }}"
+                        class="{{ request()->is('users') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span class="font-medium">User</span>
+                    </a>
 
-                <a href="{{ route('sales.report') }}" class="{{ request()->is('laporan-penjualan') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Laporan</span>
-                </a>
+                    <a href="{{ route('sales.report') }}"
+                        class="{{ request()->is('laporan-penjualan') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Laporan</span>
+                    </a>
                 @endif
 
-                @if(auth()->check() && auth()->user()->role_id == 3)
-                <a href="/dashboard"
-                   class="{{ request()->is('dashboard') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Dashboard</span>
-                </a>
+                @if (auth()->check() && auth()->user()->role_id == 3)
+                    <a href="/dashboard"
+                        class="{{ request()->is('dashboard') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
 
-                
-                <a href="{{ route('stock-additions.index') }}"
-                class="{{ request()->is('stock-additions*') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    <span class="font-medium">Tambah Stok</span>
-                </a>
+
+                    <a href="{{ route('stock-additions.index') }}"
+                        class="{{ request()->is('stock-additions*') ? 'bg-white text-purple-700' : 'text-purple-100 hover:bg-purple-600' }} flex items-center gap-3 px-4 py-3 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span class="font-medium">Tambah Stok</span>
+                    </a>
                 @endif
             </nav>
 
-            @if(auth()->check())
-            <div class="p-4 mt-auto border-t border-purple-500">
-                <form method="POST" action="{{ route('logout.perform') }}">
-                    @csrf
-                    <button type="submit" class="flex items-center justify-center w-full gap-2 py-2 text-sm font-medium text-purple-700 transition-colors bg-white rounded hover:bg-gray-100">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                            </path>
-                        </svg>
-                        Keluar
-                    </button>
-                </form>
-            </div>
+            @if (auth()->check())
+                <div class="p-4 mt-auto border-t border-purple-500">
+                    <form method="POST" action="{{ route('logout.perform') }}">
+                        @csrf
+                        <button type="submit"
+                            class="flex items-center justify-center w-full gap-2 py-2 text-sm font-medium text-purple-700 transition-colors bg-white rounded hover:bg-gray-100">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                </path>
+                            </svg>
+                            Keluar
+                        </button>
+                    </form>
+                </div>
             @endif
 
         </aside>
@@ -168,4 +179,5 @@
     </div>
 
 </body>
+
 </html>

@@ -21,7 +21,7 @@ use App\Http\Controllers\StockAdditionController;
 */
 
 Route::get('/', function () {
-    return redirect()->route('login.form');
+    return view('landingPage.index');
 });
 
 Route::get('/login', [AuthController::class, 'show'])->name('login.form');
