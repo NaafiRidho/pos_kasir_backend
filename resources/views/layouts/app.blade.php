@@ -134,43 +134,109 @@
                 @endif
             </nav>
 
-            @if (auth()->check())
-                <div class="p-4 mt-auto border-t border-purple-500">
-                    <form method="POST" action="{{ route('logout.perform') }}">
-                        @csrf
-                        <button type="submit"
-                            class="flex items-center justify-center w-full gap-2 py-2 text-sm font-medium text-purple-700 transition-colors bg-white rounded hover:bg-gray-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                </path>
-                            </svg>
-                            Keluar
-                        </button>
-                    </form>
-                </div>
-            @endif
-
         </aside>
 
         <!-- MAIN CONTENT -->
         <main class="relative flex-1 h-full overflow-y-auto bg-gray-50">
 
             <!-- TOP BAR WITH TOGGLE (mobile only) -->
-            <header class="flex items-center w-full h-16 px-4 bg-purple-600 md:hidden">
-                <button @click="openSidebar = true" class="text-white">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <h1 class="ml-4 text-xl font-semibold text-white">Menu</h1>
+            <header class="flex items-center justify-between w-full h-16 px-4 bg-purple-600 md:hidden">
+                <div class="flex items-center">
+                    <button @click="openSidebar = true" class="text-white">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <h1 class="ml-4 text-xl font-semibold text-white">Menu</h1>
+                </div>
+                
+                <!-- Avatar Dropdown Mobile -->
+                @if (auth()->check())
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="flex items-center focus:outline-none">
+                            <div class="flex items-center justify-center w-10 h-10 text-sm font-semibold text-purple-700 bg-white rounded-full">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                        </button>
+                        
+                        <div x-show="open" 
+                             x-cloak
+                             @click.outside="open = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 z-50 w-48 py-1 mt-2 bg-white rounded-lg shadow-lg">
+                            <div class="px-4 py-3 border-b">
+                                <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('logout.perform') }}">
+                                @csrf
+                                <button type="submit" class="flex items-center w-full gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Keluar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             </header>
 
-            <!-- Background Header -->
-            <header class="absolute top-0 left-0 z-0 hidden w-full h-40 bg-purple-600 md:block"></header>
+            <!-- Background Header Desktop -->
+            <header class="absolute top-0 left-0 hidden w-full h-40 bg-purple-600 md:block"></header>
+            
+            <!-- Desktop Avatar Dropdown (outside of overflow container) -->
+            @if (auth()->check())
+                <div x-data="{ openDropdown: false }" class="fixed hidden md:block right-6 top-4" style="z-index: 9999;">
+                    <button @click="openDropdown = !openDropdown" class="flex items-center gap-3 focus:outline-none">
+                        <div class="hidden text-right sm:block">
+                            <p class="text-sm font-medium text-white">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-purple-200">{{ auth()->user()->role->name ?? 'User' }}</p>
+                        </div>
+                        <div class="flex items-center justify-center w-10 h-10 text-sm font-semibold text-purple-700 bg-white rounded-full ring-2 ring-purple-300">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <div x-show="openDropdown" 
+                         x-cloak
+                         @click.outside="openDropdown = false"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 w-48 py-1 mt-2 bg-white rounded-lg shadow-lg">
+                        <div class="px-4 py-3 border-b">
+                            <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                        </div>
+                        <form method="POST" action="{{ route('logout.perform') }}">
+                            @csrf
+                            <button type="submit" class="flex items-center w-full gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Keluar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
-            <div class="relative z-10 p-6 mt-10 md:mt-0">
+            <div class="relative p-6 mt-10 md:mt-0" style="z-index: 2;">
                 @yield('content')
             </div>
 
